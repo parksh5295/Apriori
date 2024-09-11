@@ -1,0 +1,11 @@
+load data
+infile 'csv파일이 위치한 경로/엑셀파일명.csv'
+into table 테이블명
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+lines terminated by '\n'
+IGNORE 1 ROWS;
+
+
+load data infile "C:\Users\LG\Desktop\A Priori Algorithm - Python\Apriori Algorithm - SafeGrid\output-dataset_ESSlab.csv" in
+to table DataDeck_Apriori
