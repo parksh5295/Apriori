@@ -42,6 +42,7 @@ def apriori(transactions, min_support, min_confidence):
         for item in trasaction:
             print("c")
             itemset = set(frozenset([item]))
+            print(itemset)
             print("d")
             length = 1
             print("e")
