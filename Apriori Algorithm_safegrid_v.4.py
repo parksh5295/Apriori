@@ -87,7 +87,7 @@ data = load_data(file_path)
 transactions = preprocess_data(data)
 
 # Apriori 알고리즘 실행
-min_support = 0.1  # 최소 지지도
+min_support = 0.004  # 최소 지지도
 min_confidence = 0.7  # 최소 confidence
 rules = apriori(transactions, min_support, min_confidence)
 
