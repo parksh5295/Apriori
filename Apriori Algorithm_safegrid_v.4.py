@@ -12,6 +12,7 @@ def preprocess_data(data):
     for index, row in data.iterrows():
         transaction = tuple(('on' if item > 0 else 'off' for item in row[1:]))  # 1번째 열부터 변환
         transactions.append(transaction)
+        print(transactions)
     return tuple(transactions)
 
 # 지지도 계산 함수
