@@ -45,6 +45,7 @@ def apriori(transactions, min_support, min_confidence):
         length += 1
         print("2")
         candidates = generate_candidates(itemset, length)
+        print(candidates)
         print("3")
         frequent_itemsets_this_round = set()
 
