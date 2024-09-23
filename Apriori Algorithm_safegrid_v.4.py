@@ -36,36 +36,44 @@ def generate_candidates(itemset, length):
 
 # Apriori 알고리즘
 def apriori(transactions, min_support, min_confidence):
-    itemset = set(frozenset([item]) for transaction in transactions for item in transaction)
-    length = 1
-    frequent_itemsets = set()
+    print("a")
+    for trasaction in transactions:
+        print("b")
+        for item in trasaction:
+            print("c")
+            itemset = set(frozenset([item]))
+            print("d")
+            length = 1
+            print("e")
+            frequent_itemsets = set()
+            print("f")
 
-    while True:
-        print("1")
-        length += 1
-        print("2")
-        candidates = generate_candidates(itemset, length)
-        print(candidates)
-        print("3")
-        frequent_itemsets_this_round = set()
+            while True:
+                print("1")
+                length += 1
+                print("2")
+                candidates = generate_candidates(itemset, length)
+                print(candidates)
+                print("3")
+                frequent_itemsets_this_round = set()
 
-        print("4")
-        for candidate in candidates:
-            print("5")
-            support = calculate_support(candidate, transactions)
-            print("6")
-            if support >= min_support:
-                print("7")
-                frequent_itemsets_this_round.add(candidate)
+                print("4")
+                for candidate in candidates:
+                    print("5")
+                    support = calculate_support(candidate, transactions)
+                    print("6")
+                    if support >= min_support:
+                        print("7")
+                        frequent_itemsets_this_round.add(candidate)
 
-        print("8")
-        if len(frequent_itemsets_this_round) == 0:
-            break
+                print("8")
+                if len(frequent_itemsets_this_round) == 0:
+                    break
         
-        print("9")
-        itemset = frequent_itemsets_this_round
-        print("10")
-        frequent_itemsets.update(itemset)
+                print("9")
+                itemset = frequent_itemsets_this_round
+                print("10")
+                frequent_itemsets.update(itemset)
 
     # 규칙 생성 및 confidence 계산
     rules = []
