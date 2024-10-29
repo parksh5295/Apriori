@@ -10,7 +10,7 @@ cols_to_change = data.columns.difference(['reconnaissance', 'infection', 'action
 # 0보다 큰 값을 1로 변경
 data[cols_to_change] = data[cols_to_change].applymap(lambda x: 1 if x > 0 else 0)
 
-# 'anomal' 값이 1인 행만 필터링
+# 'anormal' 값이 1인 행만 필터링
 anormal_rows = data[data['anomal'] == 1]
 # 'anomal'이 1인 열들 선택
 anormal_columns = anormal_rows.columns.difference(['anomal'])
