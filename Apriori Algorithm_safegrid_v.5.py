@@ -41,10 +41,12 @@ for a in list(anormal_lists.keys()):
                 b_count = len(anormal_lists[b])
                 combined_count = len(set(anormal_lists[a]) & set(anormal_lists[b]))
 
-                if combined_count / a_count >= percent and combined_count / b_count >= percent:
-                    current_group.add(b)
-                    considered.add(b)  # 추가된 열을 고려된 집합에 추가
-                    new_group_found = True
+                # a_count 또는 b_count가 0이 아닐 경우에만 조건 확인
+                if a_count > 0 and b_count > 0:
+                    if combined_count / a_count >= percent and combined_count / b_count >= percent:
+                        current_group.add(b)
+                        considered.add(b)  # 추가된 열을 고려된 집합에 추가
+                        new_group_found = True
 
     related_groups.append(current_group)
     considered.add(a)  # 현재 열을 고려된 집합에 추가
