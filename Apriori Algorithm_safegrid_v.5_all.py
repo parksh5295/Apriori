@@ -72,11 +72,8 @@ sorted_counts = sorted(count_by_size.items())
 for size, count in sorted_counts:
     print(f"Element count {size}: {count} groups")
 
-# considered 집합을 리스트로 변환
-considered_list = list(considered)
-
-# DataFrame으로 변환
-considered_df = pd.DataFrame(considered_list, columns=['considered_columns'])
+# related_groups의 각 그룹을 DataFrame으로 변환
+related_groups_df = pd.DataFrame(related_groups)
 
 # 현재 Python 파일과 동일한 위치에 CSV 파일로 저장
-considered_df.to_csv('considered_columns_anomal_1.csv', index=False)
+related_groups_df.to_csv('related_groups_anomal_1.csv', index=False, header=False)
