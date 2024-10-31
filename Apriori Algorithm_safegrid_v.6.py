@@ -51,6 +51,9 @@ for a in list(anormal_lists.keys()):
                         new_group_found = True
                         related_groups.append(current_group.copy())  # 중간 그룹 추가
 
+# 결과 확인
+print([list(group) for group in related_groups])
+
 # 그룹의 요소 개수별로 세기 위한 딕셔너리 초기화
 count_by_size = {}
 
@@ -68,9 +71,6 @@ sorted_counts = sorted(count_by_size.items())
 # 출력
 for size, count in sorted_counts:
     print(f"Element count {size}: {count} groups")
-
-# 결과 확인
-print([list(group) for group in related_groups])
 
 # related_groups의 각 그룹을 DataFrame으로 변환
 related_groups_df = pd.DataFrame(related_groups)
