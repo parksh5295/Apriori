@@ -31,6 +31,7 @@ for a in list(anormal_lists.keys()):
         continue
     current_group = {a}  # 현재 그룹 초기화
     considered.add(a)  # 현재 열을 고려된 집합에 추가
+    related_groups.append(current_group.copy())  # 초기 그룹 추가
     new_group_found = True
     
     while new_group_found:
@@ -48,8 +49,7 @@ for a in list(anormal_lists.keys()):
                         current_group.add(b)
                         considered.add(b)  # 추가된 열을 고려된 집합에 추가
                         new_group_found = True
-
-    related_groups.append(current_group)
+                        related_groups.append(current_group.copy())  # 중간 그룹 추가
 
 # 결과 확인
 print([list(group) for group in related_groups])
