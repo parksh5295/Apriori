@@ -2,8 +2,8 @@ import pandas as pd
 
 data = pd.read_csv('./output-dataset_ESSlab.csv')
 
-# 'reconnaissance', 'infection', 'action' 열 중 하나라도 1인 경우
-data['anomal'] = data[['reconnaissance', 'infection', 'action']].any(axis=1).astype(int)
+# 'reconnaissance', 'infection', 'action' 열이 모두 0인 경우
+data['anomal'] = (~data[['reconnaissance', 'infection', 'action']].any(axis=1)).astype(int)
 
 # 'reconnaissance', 'infection', 'action' 열을 제외한 열 선택
 cols_to_change = data.columns.difference(['reconnaissance', 'infection', 'action'])
@@ -79,4 +79,4 @@ considered_list = list(considered)
 considered_df = pd.DataFrame(considered_list, columns=['considered_columns'])
 
 # 현재 Python 파일과 동일한 위치에 CSV 파일로 저장
-considered_df.to_csv('considered_columns_anomal_1.csv', index=False)
+considered_df.to_csv('considered_columns_nomal_1.csv', index=False)
