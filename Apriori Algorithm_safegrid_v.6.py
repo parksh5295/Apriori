@@ -2,8 +2,8 @@ import pandas as pd
 
 data = pd.read_csv('./output-dataset_ESSlab.csv')
 
-# 'reconnaissance', 'infection', 'action' 열이 모두 0인 경우
-data['nomal'] = (~data[['reconnaissance', 'infection', 'action']].any(axis=1)).astype(int)
+# 'reconnaissance', 'infection', 'action' 열 중 하나라도 1인 경우
+data['anomal'] = data[['reconnaissance', 'infection', 'action']].any(axis=1).astype(int)
 
 # 'reconnaissance', 'infection', 'action' 열을 제외한 열 선택
 cols_to_change = data.columns.difference(['reconnaissance', 'infection', 'action'])
@@ -11,9 +11,9 @@ cols_to_change = data.columns.difference(['reconnaissance', 'infection', 'action
 data[cols_to_change] = data[cols_to_change].applymap(lambda x: 1 if x > 0 else 0)
 
 # 'anomal' 값이 1인 행만 필터링
-anormal_rows = data[data['nomal'] == 1]
-# 'anomal'이 1인 열들 선택
-anormal_columns = anormal_rows.columns.difference(['nomal'])
+anormal_rows = data[data['anomal'] == 1]
+# 'anomal'이 1인 열들 선택, 'reconnaissance', 'infection', 'action' 열 제외
+anormal_columns = anormal_rows.columns.difference(['anomal', 'reconnaissance', 'infection', 'action'])
 
 # 각 column에서 값이 1인 row의 인덱스 리스트 만들기
 anormal_lists = {col: anormal_rows.index[anormal_rows[col] == 1].tolist() for col in anormal_columns}
@@ -51,9 +51,6 @@ for a in list(anormal_lists.keys()):
                         new_group_found = True
                         related_groups.append(current_group.copy())  # 중간 그룹 추가
 
-# 결과 확인
-print([list(group) for group in related_groups])
-
 # 그룹의 요소 개수별로 세기 위한 딕셔너리 초기화
 count_by_size = {}
 
@@ -72,8 +69,11 @@ sorted_counts = sorted(count_by_size.items())
 for size, count in sorted_counts:
     print(f"Element count {size}: {count} groups")
 
+# 결과 확인
+print([list(group) for group in related_groups])
+
 # related_groups의 각 그룹을 DataFrame으로 변환
 related_groups_df = pd.DataFrame(related_groups)
 
 # 현재 Python 파일과 동일한 위치에 CSV 파일로 저장
-related_groups_df.to_csv('related_groups_nomal_1.csv', index=False, header=False)
+related_groups_df.to_csv('related_groups_anomal_2.csv', index=False, header=False)
