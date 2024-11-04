@@ -151,10 +151,10 @@ summary = pd.concat([summary, metrics], axis=1)
 
 # Weight definition
 weights = {
-    'Accuracy': 0.4,
-    'Precision': 0.2,
-    'Recall': 0.3,
-    'F1-Score': 0.1
+    'Accuracy': 0.45,
+    'Precision': 0.35,
+    'Recall': 0.15,
+    'F1-Score': 0.05
 }
 
 # Calculate total score
