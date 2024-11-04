@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 # Step 1: Load the dataset and create the 'anomal' column
 data = pd.read_csv('./output-dataset_ESSlab.csv')
@@ -166,10 +167,10 @@ summary['Total_Score'] = summary.apply(lambda row: (row['Accuracy'] * weights['A
 def adjust_confidence(total_score, initial_confidence=0.7):
     confidence = initial_confidence
     adjustments = []
-    score_range = 10  # Starting with 10% adjustments
+    score_range = 10.0  # Starting with 10% adjustments
 
     while score_range >= 0.000001:
-        for adjustment in range(-score_range, score_range + 1):
+        for adjustment in np.arange(-score_range, score_range + 0.01, 0.01):  # 0.01 단위로 조정
             adjusted_confidence = confidence + adjustment / 100
             adjustments.append((adjusted_confidence, total_score))
 
