@@ -17,7 +17,7 @@ data[cols_to_change] = data[cols_to_change].applymap(lambda x: 1 if x > 0 else 0
 anomalous_data = data[data['anomal'] == 1]
 
 # `examples`에서 28, 31, 24, 23, 27번째 열만 선택하여 checkpoint로 사용
-checkpoint_columns = examples.iloc[:, [28, 31, 24, 23, 27]]  # iloc으로 정확한 열 선택
+checkpoint_columns = examples.iloc[[28, 31, 24, 23, 27], :]  # iloc으로 정확한 열 선택
 checkpoint_examples = checkpoint_columns.copy()
 
 # checkpoint 예시 출력 (디버깅용)
