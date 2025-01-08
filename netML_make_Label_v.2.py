@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 from keras.layers import Input, Dense, LSTM, RepeatVector, TimeDistributed
 from keras.models import Model
 
-# 1. 데이터 로드
+# 1. Loading data
 data = pd.read_csv("../Data_Resources/netML/2_training_set.json/2_training_set.csv")
 
-# 2. 문자열 피처 임베딩 함수 정의
+# 2. Define a String Feature Embedding Function
 def embed_one_hot_dense(data, column):
     unique_vals = data[column].dropna().unique()
     one_hot_map = {val: i for i, val in enumerate(unique_vals)}
@@ -23,7 +23,7 @@ def embed_sequence_autoencoder(data, column, latent_dim=10):
     max_len = max(len(seq) for seq in sequences)
     padded_sequences = np.array([np.pad(seq, (0, max_len - len(seq))) for seq in sequences])
 
-    # Autoencoder 모델
+    # Autoencoder Model
     input_seq = Input(shape=(max_len, 1))
     encoded = LSTM(latent_dim)(input_seq)
     decoded = RepeatVector(max_len)(encoded)
@@ -31,14 +31,14 @@ def embed_sequence_autoencoder(data, column, latent_dim=10):
     autoencoder = Model(input_seq, decoded)
     autoencoder.compile(optimizer="adam", loss="mse")
 
-    # 학습
+    # Learning
     autoencoder.fit(padded_sequences[..., np.newaxis], padded_sequences[..., np.newaxis], epochs=10, verbose=0)
     encoder = Model(input_seq, encoded)
 
-    # 임베딩
+    # Embedding
     return encoder.predict(padded_sequences[..., np.newaxis])
 
-# 3. 문자열 피처 임베딩 적용
+# 3. Apply String Feature Embedding
 embedded_features = []
 
 # 1. One-Hot Encoding + Dense Layer
@@ -46,7 +46,7 @@ for col in ["http_method", "dns_query_type", "dns_query_class"]:
     if col in data.columns:
         embedded_features.append(embed_one_hot_dense(data, col))
 
-# 2. Custom Tokenization 및 TF-IDF Vectorization
+# 2. Custom Tokenization and TF-IDF Vectorization
 if "http_uri" in data.columns:
     from sklearn.feature_extraction.text import TfidfVectorizer
     def custom_tokenize(text):
@@ -57,7 +57,7 @@ if "http_uri" in data.columns:
     tfidf_embedded = vectorizer.fit_transform(data["http_uri"].fillna(""))
     embedded_features.append(tfidf_embedded.toarray())
 
-# 3. GNN 임베딩
+# 3. GNN Embedding
 if all(col in data.columns for col in ["src_port", "dst_port", "sa", "da"]):
     import networkx as nx
     from node2vec import Node2Vec
@@ -95,7 +95,7 @@ for col in string_features:
     except Exception as e:
         print(f"Error embedding column {col}: {e}")
 
-# 4. 숫자형 피처 스케일링
+# 4. Scaling Numeric Features
 def parse_array_column(column):
     return column.apply(lambda x: np.array(eval(x)) if isinstance(x, str) else x)
 
@@ -104,7 +104,7 @@ numeric_data = data[numeric_columns].fillna(0)
 scaler = StandardScaler()
 scaled_numeric_data = scaler.fit_transform(numeric_data)
 
-# 5. 모든 피처 통합
+# 5. Integrate all features
 if embedded_features:
     embedded_features = np.hstack(embedded_features)
     full_data = np.hstack([scaled_numeric_data, embedded_features])
@@ -115,11 +115,11 @@ else:
 pca = PCA(n_components=2)
 pca_data = pca.fit_transform(full_data)
 
-# 7. K-Means 클러스터링
+# 7. K-Means Clusturing
 kmeans = KMeans(n_clusters=2, random_state=42)
 labels = kmeans.fit_predict(pca_data)
 
-# 8. 결과 시각화
+# 8. Visualize results
 plt.scatter(pca_data[:, 0], pca_data[:, 1], c=labels, cmap="viridis", alpha=0.6)
 plt.title("PCA + Clustering")
 plt.xlabel("PCA Component 1")

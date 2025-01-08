@@ -92,9 +92,9 @@ for col in string_features:
 
     data[f"{col}_embedded"] = encoder.predict(int_sequences)
 
-# 숫자형 피처 처리 함수
+# Numeric Feature Processing Functions
 def process_numeric_features(data):
-    # 문자열 피처 제외 (예: http_method, dns_query_name 등 제외)
+    # Exclude string features (e.g., exclude http_method, dns_query_name, etc.)
     string_features = [
         "index", "sa", "da", "http_method", "http_uri", "http_host",
         "http_code", "http_content_len", "http_content_type", "dns_query_type",
@@ -102,26 +102,26 @@ def process_numeric_features(data):
     ]
     numeric_data = data.drop(columns=string_features, errors="ignore")
     
-    # NaN 값 처리
+    # Handling NaN values
     numeric_data = numeric_data.fillna(0)
     
-    # StandardScaler로 표준화
+    # Standardize with StandardScaler
     scaler = StandardScaler()
     scaled_numeric_data = scaler.fit_transform(numeric_data)
     
     return scaled_numeric_data
 
-# 숫자형 피처 표준화
+# Standardize numeric features
 scaled_numeric_features = process_numeric_features(data)
 
-# 모든 피처 결합
-if embedded_features:  # 문자열 임베딩 결과가 있는 경우
-    embedded_features = np.hstack(embedded_features)  # 임베딩 결과 결합
-    full_data = np.hstack([scaled_numeric_features, embedded_features])  # 숫자형 데이터와 결합
+# Combine all features
+if embedded_features:  # If string embedding results in
+    embedded_features = np.hstack(embedded_features)  # Combine embedding results
+    full_data = np.hstack([scaled_numeric_features, embedded_features])  # Combining with numeric data
 else:
-    full_data = scaled_numeric_features  # 숫자형 데이터만 사용
+    full_data = scaled_numeric_features  # Use numeric data only
 
-# NaN 또는 무한대 값 확인
+# Checking for NaN or infinity values
 if np.isnan(full_data).any() or np.isinf(full_data).any():
     print("Warning: NaN or Inf values detected in full_data.")
 else:
