@@ -11,7 +11,7 @@ import networkx as nx
 from node2vec import Node2Vec
 
 # Load the data
-data = pd.read_csv("./netML/2_training_set.json/2_training_set.csv")
+data = pd.read_csv("../Data_Resources/netML/2_training_set.json/2_training_set.csv")
 
 # Helper functions
 def parse_array_column(column):

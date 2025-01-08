@@ -8,7 +8,7 @@ from keras.layers import Input, Dense, LSTM, RepeatVector, TimeDistributed
 from keras.models import Model
 
 # 1. 데이터 로드
-data = pd.read_csv("./netML/2_training_set.json/2_training_set.csv")
+data = pd.read_csv("../Data_Resources/netML/2_training_set.json/2_training_set.csv")
 
 # 2. 문자열 피처 임베딩 함수 정의
 def embed_one_hot_dense(data, column):
