@@ -11,10 +11,10 @@ from node2vec import Node2Vec
 
 # 0. Label Mapping
 # JSON file reading
-with open('training_anno_fine.json', 'r') as f:
+with open('../Data_Resources/netML/training_anno_fine.json/training_anno_fine.json', 'r') as f:
     fine_annotations = json.load(f)
 
-with open('training_anno_top.json', 'r') as f:
+with open('../Data_Resources/netML/training_anno_top.json/training_anno_top.json', 'r') as f:
     top_annotations = json.load(f)
 
 # Change JSON data to dictionary
