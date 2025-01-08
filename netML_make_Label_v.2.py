@@ -6,6 +6,7 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 from keras.layers import Input, Dense, LSTM, RepeatVector, TimeDistributed
 from keras.models import Model
+from node2vec import Node2Vec
 
 # 1. Loading data
 data = pd.read_csv("../Data_Resources/netML/2_training_set.json/2_training_set.csv")
