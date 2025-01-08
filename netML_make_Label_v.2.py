@@ -11,6 +11,24 @@ from node2vec import Node2Vec
 # 1. Loading data
 data = pd.read_csv("../Data_Resources/netML/2_training_set.json/2_training_set.csv")
 
+def remove_mixed_dtype_columns(df):
+    mixed_columns = []
+
+    for column in df.columns:
+        # Save each column's data type as a set
+        unique_types = set(df[column].map(type))
+        
+        # More than one data type is considered a mixed column
+        if len(unique_types) > 1:
+            mixed_columns.append(column)
+    
+    # Remove mixed heat
+    cleaned_df = df.drop(columns=mixed_columns)
+    
+    return cleaned_df
+
+data = remove_mixed_dtype_columns(data)
+
 # 2. Define a String Feature Embedding Function
 def embed_one_hot_dense(data, column):
     unique_vals = data[column].dropna().unique()
