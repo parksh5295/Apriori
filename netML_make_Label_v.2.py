@@ -1,6 +1,7 @@
 import pandas as pd
 import json
 import numpy as np
+import networkx as nx
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
@@ -27,6 +28,8 @@ data = pd.read_csv("../Data_Resources/netML/2_training_set.json/2_training_set.c
 # Add 'id' label to columns
 data['label_fine'] = data['id'].map(fine_dict).fillna('unknown')
 data['label_top'] = data['id'].map(top_dict).fillna('unknown')
+
+data = data.drop(['sa', 'da'], axis=1) # because of IP_masked
 
 def remove_mixed_dtype_columns(df):
     mixed_columns = []
@@ -94,16 +97,23 @@ if "http_uri" in data.columns:
     embedded_features.append(tfidf_embedded.toarray())
 
 # 3. GNN Embedding
-if all(col in data.columns for col in ["src_port", "dst_port", "sa", "da"]):
+if all(col in data.columns for col in ["src_port", "dst_port", "bytes_in", "bytes_out"]):
     import networkx as nx
     from node2vec import Node2Vec
     graph = nx.Graph()
+    
     for idx, row in data.iterrows():
-        graph.add_edge(row["sa"], row["da"], src_port=row["src_port"], dst_port=row["dst_port"])
+        # Graph Trunk: bytes_in, bytes_out
+        graph.add_edge(row["src_port"], row["dst_port"], 
+                       weight_in=row["bytes_in"], weight_out=row["bytes_out"])
+    
+    # Node2Vec Model Learning
     node2vec = Node2Vec(graph, dimensions=16, walk_length=10, num_walks=100, workers=4)
     model = node2vec.fit(window=5, min_count=1)
+    
+    # Embedding Extraction of Node
     gnn_embedded = [model.wv[node] for node in graph.nodes() if node in model.wv]
-    embedded_features.append(np.array(gnn_embedded))
+    embedded_features.append(np.array(gnn_embedded))  # Add Embedding
 
 # 4. Manual Feature Engineering (tls_cs)
 if "tls_cs" in data.columns:
