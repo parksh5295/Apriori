@@ -114,6 +114,7 @@ def process_numeric_features(data):
 # Standardize numeric features
 scaled_numeric_features = process_numeric_features(data)
 
+'''
 # Combine all features
 if embedded_features:  # If string embedding results in
     embedded_features = np.hstack(embedded_features)  # Combine embedding results
@@ -126,6 +127,7 @@ if np.isnan(full_data).any() or np.isinf(full_data).any():
     print("Warning: NaN or Inf values detected in full_data.")
 else:
     print("Data prepared successfully for PCA and clustering.")
+'''
 
 
 # Prepare numeric data for PCA
