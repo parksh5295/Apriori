@@ -1,2 +1,5 @@
-import tensorflow as tf
-print(tf.__version__)
+import neupy
+print(neupy.__file__)
+
+import collections
+print(collections.__file__)
