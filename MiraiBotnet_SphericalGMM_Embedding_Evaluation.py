@@ -1,11 +1,11 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.cluster import MeanShift, estimate_bandwidth
+from sklearn.mixture import GaussianMixture
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, jaccard_score, silhouette_score
 from sklearn.decomposition import PCA
 
-# Load sample data
+# Load sample data (replace with your actual file path)
 data = pd.read_csv("./output-dataset_ESSlab.csv")
 
 # Define label for attack vs benign
@@ -19,66 +19,70 @@ encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
 categorical_data = encoder.fit_transform(data[categorical_features])
 
 # 2. Timing Features (e.g., iat: inter-arrival time)
-time_features = [
-    'flow_iat_max', 'forward_iat_std', 'forward_iat_min', 'flow_iat_min',
-    'backward_iat_min', 'backward_iat_max', 'flow_iat_total', 'forward_iat_mean', 'flow_iat_mean'
+time_features_group1 = [
+    'flow_iat_max', 'flow_iat_min', 'flow_iat_mean', 'flow_iat_total', 'flow_iat_std'
 ]
-scaler_time = StandardScaler()
-time_data = scaler_time.fit_transform(data[time_features])
+time_features_group2 = [
+    'forward_iat_max', 'forward_iat_min', 'forward_iat_mean', 'forward_iat_total', 'forward_iat_std'
+]
+time_features_group3 = [
+    'backward_iat_max', 'backward_iat_min', 'backward_iat_mean', 'backward_iat_total', 'backward_iat_std'
+]
+scaler_time1 = StandardScaler()
+scaler_time2 = StandardScaler()
+scaler_time3 = StandardScaler()
+time_data1 = scaler_time1.fit_transform(data[time_features_group1])
+time_data2 = scaler_time2.fit_transform(data[time_features_group2])
+time_data3 = scaler_time3.fit_transform(data[time_features_group3])
 
 # 3. Packet Length Features
-packet_length_features = [
-    'total_length_of_forward_packets', 'backward_packet_length_max', 'backward_packet_length_std',
-    'forward_packet_length_mean', 'forward_packet_length_min', 'forward_packet_length_std',
-    'backward_packet_length_mean', 'backward_packet_length_min', 'total_length_of_backward_packets'
+packet_length_forward = [
+    'forward_packet_length_mean', 'forward_packet_length_min', 'forward_packet_length_max', 'forward_packet_length_std'
 ]
-scaler_packet = StandardScaler()
-packet_length_data = scaler_packet.fit_transform(data[packet_length_features])
-
-# 4. Count Features (e.g., packet counts, flow counts)
-count_features = [
-    'fpkts_per_second', 'bpkts_per_second', 'total_bhlen', 'total_fhlen',
-    'total_backward_packets', 'total_forward_packets', 'flow_packets_per_second'
+packet_length_backward = [
+    'backward_packet_length_mean', 'backward_packet_length_min', 'backward_packet_length_max', 'backward_packet_length_std'
 ]
-scaler_count = StandardScaler()
-count_data = scaler_count.fit_transform(data[count_features])
+scaler_packet_forward = StandardScaler()
+scaler_packet_backward = StandardScaler()
+packet_length_data_forward = scaler_packet_forward.fit_transform(data[packet_length_forward])
+packet_length_data_backward = scaler_packet_backward.fit_transform(data[packet_length_backward])
 
-# 5. Binary Features (e.g., flow flags)
-binary_features = [
+# 4. Count Features
+packet_count_features = [
+    'fpkts_per_second', 'bpkts_per_second', 'total_forward_packets', 'total_backward_packets',
+    'total_length_of_forward_packets', 'total_length_of_backward_packets', 'flow_packets_per_second'
+]
+flow_flag_features = [
     'flow_psh', 'flow_syn', 'flow_urg', 'flow_fin', 'flow_ece', 'flow_ack', 'flow_rst', 'flow_cwr'
 ]
-binary_data = data[binary_features].values
+scaler_count = StandardScaler()
+packet_count_data = scaler_count.fit_transform(data[packet_count_features])
+flow_flag_data = data[flow_flag_features].values
 
 # Combine processed features
-X = np.hstack([categorical_data, time_data, packet_length_data, count_data, binary_data])
+X = np.hstack([ 
+    categorical_data, time_data1, time_data2, time_data3,
+    packet_length_data_forward, packet_length_data_backward,
+    packet_count_data, flow_flag_data
+])
 
 # Dimensionality reduction for clustering (optional)
 pca = PCA(n_components=10, random_state=42)
 X_reduced = pca.fit_transform(X)
 
-# Estimate bandwidth based on the data
-bandwidth = estimate_bandwidth(X_reduced, quantile=0.2, n_samples=500, random_state=42)
-
-# Apply MeanShift with the estimated bandwidth
-MShift = MeanShift(bandwidth=bandwidth, bin_seeding=True)
-data['cluster'] = MShift.fit_predict(X_reduced)
-
-# Cluster centers and labels
-cluster_centers = MShift.cluster_centers_
-n_clusters = len(np.unique(data['cluster']))
-print(f"Estimated number of clusters: {n_clusters}")
+# Apply GMM clustering
+gmm = GaussianMixture(n_components=2, covariance_type='spherical', random_state=42)
+data['cluster'] = gmm.fit_predict(X_reduced)
 
 # Adjust cluster labels to match ground truth if necessary
 cluster_mapping = {
     0: 1,
     1: 0
 }
-data['adjusted_cluster'] = data['cluster'].map(cluster_mapping)
+data['adjusted_cluster'] = data['cluster'].map(cluster_mapping).fillna(-1).astype(int)
 
 # Filter out noise points (-1) for evaluation
 data_filtered = data[data['cluster'] != -1]
-# Replace NaN with a default cluster or remove them
-data['adjusted_cluster'] = data['adjusted_cluster'].fillna(-1)  # Replace NaN with -1
 
 # Evaluate clustering performance (Avg=macro)
 if not data_filtered.empty:
@@ -148,7 +152,7 @@ else:
     w_accuracy_adjusted = w_precision_adjusted = w_recall_adjusted = w_f1_adjusted = w_jaccard_adjusted = w_silhouette_adjusted = np.nan
 
 # Save results to CSV
-data[['cluster', 'adjusted_cluster', 'label']].to_csv("./MiraiBotnet_MShift_clustering_Compare.csv", index=False)
+data[['cluster', 'adjusted_cluster', 'label']].to_csv("./MiraiBotnet_SGMM_clustering_Compare.csv", index=False)
 
 # Save metrics to CSV
 metrics = {
@@ -161,7 +165,7 @@ metrics = {
     'Weighted_Adjusted': [w_accuracy_adjusted, w_precision_adjusted, w_recall_adjusted, w_f1_adjusted, w_jaccard_adjusted, w_silhouette_adjusted]
 }
 metrics_df = pd.DataFrame(metrics)
-metrics_df.to_csv("./MiraiBotnet_MShift_clustering_Compare_Metrics.csv", index=False)
+metrics_df.to_csv("./MiraiBotnet_SGMM_clustering_Compare_Metrics.csv", index=False)
 
 # Print evaluation metrics
 print("Macro Clustering Performance Metrics:")
