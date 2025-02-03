@@ -1,5 +1,2 @@
-import neupy
-print(neupy.__file__)
-
-import collections
-print(collections.__file__)
+import mlxtend
+print(mlxtend.__version__)
