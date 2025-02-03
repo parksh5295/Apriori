@@ -68,13 +68,13 @@ grid_indices = np.digitize(X_reduced, bins=np.linspace(X_reduced.min(), X_reduce
 # Step 2: Frequent Pattern Mining using Apriori
 df_grid = pd.DataFrame(grid_indices, columns=[f'Feature_{i}' for i in range(X_reduced.shape[1])])
 df_grid = pd.get_dummies(df_grid, columns=df_grid.columns)
-frequent_itemsets = apriori(df_grid, min_support=0.05, use_colnames=True)
+frequent_itemsets = apriori(df_grid, min_support=0.07, use_colnames=True)
 print("Frequent_itemsets: ")
 print(frequent_itemsets)
 print(frequent_itemsets.columns)
 
 # Step 3: Extract Clusters using Association Rules
-rules = association_rules(frequent_itemsets, metric="confidence", min_threshold=0.6, num_itemsets=10)
+rules = association_rules(frequent_itemsets, metric="confidence", min_threshold=0.7, num_itemsets=10)
 cluster_labels = np.zeros(len(X_reduced)) - 1  # Default: -1 (Noise)
 
 for idx, row in rules.iterrows():
