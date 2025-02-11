@@ -68,7 +68,7 @@ grid_indices = np.digitize(X_reduced, bins=np.linspace(X_reduced.min(), X_reduce
 # Step 2: Frequent Pattern Mining using Apriori
 df_grid = pd.DataFrame(grid_indices, columns=[f'Feature_{i}' for i in range(X_reduced.shape[1])])
 df_grid = pd.get_dummies(df_grid, columns=df_grid.columns)
-frequent_itemsets = apriori(df_grid, min_support=0.9, use_colnames=True)
+frequent_itemsets = apriori(df_grid, min_support=0.98, use_colnames=True)
 print("Frequent_itemsets: ")
 print(frequent_itemsets)
 print(frequent_itemsets.columns)
