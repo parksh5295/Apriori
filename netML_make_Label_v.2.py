@@ -12,10 +12,10 @@ from node2vec import Node2Vec
 
 # 0. Label Mapping
 # JSON file reading
-with open('../Data_Resources/netML/2_training_anno_fine.json/2_training_anno_fine.json', 'r') as f:
+with open('../Data_Resources/netML-Competition2020/2_training_anno_fine.json/2_training_anno_fine.json', 'r') as f:
     fine_annotations = json.load(f)
 
-with open('../Data_Resources/netML/2_training_anno_top.json/2_training_anno_top.json', 'r') as f:
+with open('../Data_Resources/netML-Competition2020/2_training_anno_top.json/2_training_anno_top.json', 'r') as f:
     top_annotations = json.load(f)
 
 # Change JSON data to dictionary
@@ -23,7 +23,7 @@ fine_dict = fine_annotations
 top_dict = top_annotations
 
 # 1. Loading data
-data = pd.read_csv("../Data_Resources/netML/2_training_set.json/2_training_set.csv")
+data = pd.read_csv("../Data_Resources/netML-Competition2020/2_training_set.json/2_training_set.csv")
 
 # Add 'id' label to columns
 data['label_fine'] = data['id'].map(fine_dict).fillna('unknown')

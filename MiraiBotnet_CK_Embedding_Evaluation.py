@@ -221,7 +221,7 @@ else:
     w_accuracy_adjusted = w_precision_adjusted = w_recall_adjusted = w_f1_adjusted = w_jaccard_adjusted = w_silhouette_adjusted = np.nan
 
 # Save results to CSV
-data[['cluster', 'adjusted_cluster', 'label']].to_csv("./MiraiBotnet_GK_clustering_Compare.csv", index=False)
+data[['cluster', 'adjusted_cluster', 'label']].to_csv("./MiraiBotnet_CK_clustering_Compare.csv", index=False)
 
 # Save metrics to CSV
 metrics = {
@@ -234,7 +234,7 @@ metrics = {
     'Weighted_Adjusted': [w_accuracy_adjusted, w_precision_adjusted, w_recall_adjusted, w_f1_adjusted, w_jaccard_adjusted, w_silhouette_adjusted]
 }
 metrics_df = pd.DataFrame(metrics)
-metrics_df.to_csv("./MiraiBotnet_GK_clustering_Compare_Metrics.csv", index=False)
+metrics_df.to_csv("./MiraiBotnet_CK_clustering_Compare_Metrics.csv", index=False)
 
 # Print evaluation metrics
 print("Fuzzy C-Means Clustering Performance Metrics:")

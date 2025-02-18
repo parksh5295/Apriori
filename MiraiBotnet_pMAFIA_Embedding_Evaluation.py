@@ -5,6 +5,7 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, jaccard_score, silhouette_score
 from mlxtend.frequent_patterns import apriori, association_rules
 import time
+from tqdm import tqdm  # Import tqdm for progress bar
 
 # Clustering Methods: pMAFIA
 
@@ -75,9 +76,11 @@ print(frequent_itemsets.columns)
 
 # Step 3: Extract Clusters using Association Rules
 rules = association_rules(frequent_itemsets, metric="confidence", min_threshold=0.7, num_itemsets=10)
+
+# Use tqdm to show the progress bar for association rule processing
 cluster_labels = np.zeros(len(X_reduced)) - 1  # Default: -1 (Noise)
 
-for idx, row in rules.iterrows():
+for idx, row in tqdm(rules.iterrows(), total=len(rules), desc="Processing Rules"):
     matching_rows = df_grid[list(row['antecedents'])].eq(1).all(axis=1)
     cluster_labels[matching_rows] = idx
 

@@ -4,6 +4,7 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.decomposition import PCA
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, jaccard_score, silhouette_score
 from mlxtend.frequent_patterns import fpgrowth, association_rules
+from tqdm import tqdm  # Import tqdm for progress bar
 
 # Load sample data
 data = pd.read_csv("./output-dataset_ESSlab.csv")
@@ -60,15 +61,22 @@ grid_indices = np.digitize(X_reduced, bins=np.linspace(X_reduced.min(), X_reduce
 df_grid = pd.DataFrame(grid_indices, columns=[f'Feature_{i}' for i in range(X_reduced.shape[1])])
 df_grid = pd.get_dummies(df_grid, columns=df_grid.columns)
 
-frequent_itemsets = fpgrowth(df_grid, min_support=0.08, use_colnames=True)
+# Using tqdm for progress bar during mining
+frequent_itemsets = None
+with tqdm(total=len(df_grid), desc="Mining frequent itemsets") as pbar:
+    frequent_itemsets = fpgrowth(df_grid, min_support=0.08, use_colnames=True)
+    pbar.update(len(df_grid))  # Update progress bar after processing
 
 # Step 3: Extract Clusters using Association Rules
 rules = association_rules(frequent_itemsets, metric="confidence", min_threshold=0.7)
-cluster_labels = np.zeros(len(X_reduced)) - 1  # Default: -1 (Noise)
 
-for idx, row in rules.iterrows():
-    matching_rows = df_grid[list(row['antecedents'])].eq(1).all(axis=1)
-    cluster_labels[matching_rows] = idx
+# Using tqdm for progress bar during cluster assignment
+cluster_labels = np.zeros(len(X_reduced)) - 1  # Default: -1 (Noise)
+with tqdm(total=len(rules), desc="Assigning clusters") as pbar:
+    for idx, row in rules.iterrows():
+        matching_rows = df_grid[list(row['antecedents'])].eq(1).all(axis=1)
+        cluster_labels[matching_rows] = idx
+        pbar.update(1)  # Update progress bar after each assignment
 
 # Assign clusters (mapping to 0 or 1)
 unique_clusters = np.unique(cluster_labels)
