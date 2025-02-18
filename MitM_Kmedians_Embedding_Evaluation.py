@@ -1,7 +1,7 @@
+from pyclustering.cluster.kmedoids import kmedoids
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.cluster import KMedoids
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, jaccard_score, silhouette_score
 from sklearn.decomposition import PCA
 from tqdm import tqdm
@@ -11,10 +11,9 @@ data_file = "../Data_Resources/ARP_MitM_Kitsune/ARP_MitM_dataset.csv/ARP_MitM_da
 data = pd.read_csv(data_file)
 
 # 2. Define Label for Attack vs Benign
-data['label'] = (data.iloc[:, -1] != 0).astype(int)  # 0 for normal, 1 for attack
+data['Label'] = (data.iloc[:, -1] != 0).astype(int)  # 0 for normal, 1 for attack
 
 # 3. Feature-specific embedding and preprocessing
-# Categorical Features (e.g., protocol type)
 categorical_features = []  # Kitsune has no explicit categorical features
 if categorical_features:
     encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
@@ -22,7 +21,7 @@ if categorical_features:
 else:
     categorical_data = np.empty((len(data), 0))  # Treating as an empty array
 
-# Timing Features (e.g., flow_iat, forward_iat, etc...)
+# Timing Features
 timing_features = [
     'SrcMAC_IP_w_100ms', 'SrcMAC_IP_mu_100ms', 'SrcMAC_IP_sigma_100ms', 'SrcMAC_IP_max_100ms', 'SrcMAC_IP_min_100ms',
     'SrcIP_w_100ms', 'SrcIP_mu_100ms', 'SrcIP_sigma_100ms', 'SrcIP_max_100ms', 'SrcIP_min_100ms',
@@ -31,22 +30,22 @@ timing_features = [
 scaler_time = StandardScaler()
 time_data = scaler_time.fit_transform(data[timing_features])
 
-# Packet Length Features (e.g., forward/backward packet size)
+# Packet Length Features
 packet_length_features = [
     'Socket_w_100ms', 'Socket_mu_100ms', 'Socket_sigma_100ms', 'Socket_max_100ms', 'Socket_min_100ms'
 ]
 scaler_packet = StandardScaler()
 packet_length_data = scaler_packet.fit_transform(data[packet_length_features])
 
-# Count Features (e.g., packet counts per second)
+# Count Features
 count_features = [
     'Jitter_mu_100ms', 'Jitter_sigma_100ms', 'Jitter_max_100ms'
 ]
 scaler_count = StandardScaler()
 count_data = scaler_count.fit_transform(data[count_features])
 
-# Binary Features (e.g., flags)
-binary_features = []  # Kitsune dataset has no clear binary features
+# Binary Features (No explicit binary features in Kitsune dataset)
+binary_features = []
 binary_data = np.empty((len(data), 0))  # Treating as an empty array
 
 # 4. Combine Processed Features
@@ -58,13 +57,25 @@ X_reduced = pca.fit_transform(X)
 
 # 6. Apply KMedoids Clustering
 num_clusters = 2  # Assuming binary classification
-kmedoids = KMedoids(n_clusters=num_clusters, random_state=42)
+initial_medoids = [0, 1]  # Example: Initial medoids as indices 0 and 1
+
+# KMedoids clustering with pyclustering
+kmedoids_instance = kmedoids(X_reduced, initial_medoids)
 
 # Run clustering with progress bar
 print("Clustering in Progress...")
 with tqdm(total=len(X_reduced), desc="Clustering", unit="samples") as pbar:
-    data['cluster'] = kmedoids.fit_predict(X_reduced)
+    kmedoids_instance.process()  # Perform clustering
     pbar.update(len(X_reduced))  # Update when clustering is complete
+
+# Get the clusters
+clusters = kmedoids_instance.get_clusters()
+
+# Map cluster assignments to data
+data['cluster'] = -1  # Default value for cluster column
+for cluster_id, cluster in enumerate(clusters):
+    for sample_index in cluster:
+        data.loc[sample_index, 'cluster'] = cluster_id
 
 # 7. Adjust Cluster Labels to Match Ground Truth (if needed)
 cluster_mapping = {0: 1, 1: 0}
@@ -97,13 +108,13 @@ def evaluate_clustering(y_true, y_pred, X_data):
         }
     return {}
 
-metrics_original = evaluate_clustering(data['label'], data['cluster'], X_reduced)
-metrics_adjusted = evaluate_clustering(data['label'], data['adjusted_cluster'], X_reduced)
+metrics_original = evaluate_clustering(data['Label'], data['cluster'], X_reduced)
+metrics_adjusted = evaluate_clustering(data['Label'], data['adjusted_cluster'], X_reduced)
 
 # Save Results to CSV
-data[['cluster', 'adjusted_cluster', 'label']].to_csv("./MitM_KMedoids_clustering_Compare.csv", index=False)
+data[['cluster', 'adjusted_cluster', 'Label']].to_csv("./MitM_KMedians_clustering_Compare.csv", index=False)
 metrics_df = pd.DataFrame([metrics_original, metrics_adjusted], index=["Original", "Adjusted"])
-metrics_df.to_csv("./MitM_KMedoids_clustering_Compare_Metrics.csv", index=True)
+metrics_df.to_csv("./MitM_KMedians_clustering_Compare_Metrics.csv", index=True)
 
 # Print Evaluation Results
 print("\nClustering & Evaluation Completed!")

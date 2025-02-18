@@ -11,7 +11,7 @@ data_file = "../Data_Resources/ARP_MitM_Kitsune/ARP_MitM_dataset.csv/ARP_MitM_da
 data = pd.read_csv(data_file)
 
 # 2. Define Label for Attack vs Benign
-data['label'] = (data.iloc[:, -1] != 0).astype(int)  # 0 for normal, 1 for attack
+data['Label'] = (data.iloc[:, -1] != 0).astype(int)  # 0 for normal, 1 for attack
 
 # 3. Feature-specific embedding and preprocessing
 categorical_features = []  # Kitsune has no explicit categorical features
@@ -89,11 +89,11 @@ def evaluate_clustering(y_true, y_pred, X_data):
         }
     return {}
 
-metrics_original = evaluate_clustering(data['label'], data['cluster'], X_reduced)
-metrics_adjusted = evaluate_clustering(data['label'], data['adjusted_cluster'], X_reduced)
+metrics_original = evaluate_clustering(data['Label'], data['cluster'], X_reduced)
+metrics_adjusted = evaluate_clustering(data['Label'], data['adjusted_cluster'], X_reduced)
 
 # Save Results to CSV
-data[['cluster', 'adjusted_cluster', 'label']].to_csv("./MitM_DBSCAN_clustering_Compare.csv", index=False)
+data[['cluster', 'adjusted_cluster', 'Label']].to_csv("./MitM_DBSCAN_clustering_Compare.csv", index=False)
 metrics_df = pd.DataFrame([metrics_original, metrics_adjusted], index=["Original", "Adjusted"])
 metrics_df.to_csv("./MitM_DBSCAN_clustering_Compare_Metrics.csv", index=True)
 

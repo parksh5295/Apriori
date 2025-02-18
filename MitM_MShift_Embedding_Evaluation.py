@@ -11,7 +11,7 @@ data_file = "../Data_Resources/ARP_MitM_Kitsune/ARP_MitM_dataset.csv/ARP_MitM_da
 data = pd.read_csv(data_file)
 
 # 2️. Define Label for Attack vs Benign
-data['label'] = (data.iloc[:, -1] != 0).astype(int)  # 0 for normal, 1 for attack
+data['Label'] = (data.iloc[:, -1] != 0).astype(int)  # 0 for normal, 1 for attack
 
 # 3️. Feature-specific embedding and preprocessing
 # Categorical Features (e.g., protocol type)
@@ -106,14 +106,14 @@ def evaluate_clustering(y_true, y_pred, X_data):
     ]}
 
 # Original Cluster Evaluation
-metrics_original = evaluate_clustering(data_filtered['label'], data_filtered['cluster'], X_reduced[data['cluster'] != -1])
+metrics_original = evaluate_clustering(data_filtered['Label'], data_filtered['cluster'], X_reduced[data['cluster'] != -1])
 
 # Adjusted Cluster Evaluation
 data_filtered_adjusted = data[data['adjusted_cluster'] != -1]
-metrics_adjusted = evaluate_clustering(data_filtered_adjusted['label'], data_filtered_adjusted['adjusted_cluster'], X_reduced[data['adjusted_cluster'] != -1])
+metrics_adjusted = evaluate_clustering(data_filtered_adjusted['Label'], data_filtered_adjusted['adjusted_cluster'], X_reduced[data['adjusted_cluster'] != -1])
 
 # 10️. Save Results to CSV
-data[['cluster', 'adjusted_cluster', 'label']].to_csv("./MitM_MShift_clustering_Compare.csv", index=False)
+data[['cluster', 'adjusted_cluster', 'Label']].to_csv("./MitM_MShift_clustering_Compare.csv", index=False)
 
 metrics_df = pd.DataFrame([metrics_original, metrics_adjusted], index=["Original", "Adjusted"])
 metrics_df.to_csv("./MitM_MShift_clustering_Compare_Metrics.csv", index=True)
