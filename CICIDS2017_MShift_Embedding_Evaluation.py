@@ -5,55 +5,77 @@ import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, jaccard_score, silhouette_score
 from tqdm import tqdm
+from CICIDS2017_CSV_Selector import select_csv_file
 
-# Load the dataset
-data = pd.read_csv("../Data_Resources/netML/netML_dataset.csv")
+# Load sample data
+select_csv = select_csv_file()
+data = pd.read_csv(select_csv)
 
 # Define label (assumed 'Label' column contains ground truth)
-data['label'] = data['Label'].apply(lambda x: 1 if x == "Attack" else 0)
+data['label'] = data['Label'].apply(lambda x: 0 if x == "BENIGN" else 1)
 features = data.drop(columns=["label"])
 
 # Feature preprocessing
 # 1. Categorical Data Embedding
-categorical_features = ['Protocol']  # Assuming 'Protocol' is categorical
+categorical_features = ['Destination Port']
 encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
 categorical_data = encoder.fit_transform(data[categorical_features])
+categorical_df = pd.DataFrame(categorical_data, columns=encoder.get_feature_names_out(categorical_features))
 
 # 2. Timing Features
 time_features = [
-    'Flow IAT Max', 'Flow IAT Min', 'Flow IAT Mean', 'Flow IAT Std',
-    'Fwd IAT Total', 'Fwd IAT Mean', 'Fwd IAT Max', 'Fwd IAT Min',
-    'Bwd IAT Total', 'Bwd IAT Mean', 'Bwd IAT Max', 'Bwd IAT Min'
+    'Flow Duration', 'Flow IAT Mean', 'Flow IAT Std', 'Flow IAT Max', 'Flow IAT Min',
+    'Fwd IAT Total', 'Fwd IAT Mean', 'Fwd IAT Std', 'Fwd IAT Max', 'Fwd IAT Min',
+    'Bwd IAT Total', 'Bwd IAT Mean', 'Bwd IAT Std', 'Bwd IAT Max', 'Bwd IAT Min',
+    'Active Mean', 'Active Std', 'Active Max', 'Active Min',
+    'Idle Mean', 'Idle Std', 'Idle Max', 'Idle Min'
 ]
 scaler_time = StandardScaler()
 time_data = scaler_time.fit_transform(data[time_features])
+time_df = pd.DataFrame(time_data, columns=time_features)
 
 # 3. Packet Length Features
 packet_length_features = [
     'Total Length of Fwd Packets', 'Total Length of Bwd Packets',
     'Fwd Packet Length Max', 'Fwd Packet Length Min', 'Fwd Packet Length Mean', 'Fwd Packet Length Std',
-    'Bwd Packet Length Max', 'Bwd Packet Length Min', 'Bwd Packet Length Mean', 'Bwd Packet Length Std'
+    'Bwd Packet Length Max', 'Bwd Packet Length Min', 'Bwd Packet Length Mean', 'Bwd Packet Length Std',
+    'Packet Length Mean', 'Packet Length Std', 'Packet Length Variance',
+    'Avg Fwd Segment Size', 'Avg Bwd Segment Size'
 ]
 scaler_packet = StandardScaler()
-packet_length_data = scaler_packet.fit_transform(data[packet_length_features])
+packet_data = scaler_packet.fit_transform(data[packet_length_features])
+packet_df = pd.DataFrame(packet_data, columns=packet_length_features)
 
 # 4. Count Features
 count_features = [
-    'Total Fwd Packets', 'Total Backward Packets', 'Flow Packets/s',
-    'Fwd Packets/s', 'Bwd Packets/s', 'Subflow Fwd Packets', 'Subflow Bwd Packets'
+    'Total Fwd Packets', 'Total Backward Packets',
+    'Flow Bytes/s', 'Flow Packets/s',
+    'Fwd Packets/s', 'Bwd Packets/s',
+    'Fwd Header Length', 'Bwd Header Length',
+    'Down/Up Ratio', 'Average Packet Size',
+    'Fwd Avg Bytes/Bulk', 'Fwd Avg Packets/Bulk', 'Fwd Avg Bulk Rate',
+    'Bwd Avg Bytes/Bulk', 'Bwd Avg Packets/Bulk', 'Bwd Avg Bulk Rate',
+    'Subflow Fwd Packets', 'Subflow Fwd Bytes',
+    'Subflow Bwd Packets', 'Subflow Bwd Bytes',
+    'Init_Win_bytes_forward', 'Init_Win_bytes_backward',
+    'act_data_pkt_fwd', 'min_seg_size_forward'
 ]
 scaler_count = StandardScaler()
 count_data = scaler_count.fit_transform(data[count_features])
+count_df = pd.DataFrame(count_data, columns=count_features)
 
 # 5. Binary Features
 binary_features = [
-    'FIN Flag Count', 'SYN Flag Count', 'RST Flag Count', 'PSH Flag Count',
-    'ACK Flag Count', 'URG Flag Count', 'CWE Flag Count', 'ECE Flag Count'
+    'Fwd PSH Flags', 'Bwd PSH Flags',
+    'Fwd URG Flags', 'Bwd URG Flags',
+    'FIN Flag Count', 'SYN Flag Count', 'RST Flag Count',
+    'PSH Flag Count', 'ACK Flag Count', 'URG Flag Count',
+    'CWE Flag Count', 'ECE Flag Count'
 ]
-binary_data = data[binary_features].values
+binary_df = data[binary_features].astype(int)
 
 # Combine processed features
-X = np.hstack([categorical_data, time_data, packet_length_data, count_data, binary_data])
+X = np.hstack([categorical_data, time_data, packet_data, count_data, binary_df.to_numpy()])
 
 # Dimensionality reduction using PCA
 pca = PCA(n_components=10, random_state=42)
@@ -98,9 +120,9 @@ def evaluate_clustering(y_true, y_pred, X_data):
 metrics_original = evaluate_clustering(data['label'], data['cluster'], X_reduced)
 
 # Save Results to CSV
-data[['cluster', 'label']].to_csv("./netML_MShift_clustering_Compare.csv", index=False)
+data[['cluster', 'label']].to_csv("./CICIDS2017_MShift_clustering_Compare.csv", index=False)
 metrics_df = pd.DataFrame([metrics_original], index=["Original"])
-metrics_df.to_csv("./netML_MShift_clustering_Compare_Metrics.csv", index=True)
+metrics_df.to_csv("./CICIDS2017_MShift_clustering_Compare_Metrics.csv", index=True)
 
 # Print Evaluation Results
 print("\nClustering & Evaluation Completed!")

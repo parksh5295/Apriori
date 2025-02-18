@@ -1,19 +1,51 @@
-from sklearn.cluster import MeanShift
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+from scipy import stats
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, jaccard_score, silhouette_score
-from tqdm import tqdm
 
-# Load the dataset
+# Function to perform Anderson-Darling test to check if a cluster is Gaussian
+def is_gaussian(data):
+    # Perform the Anderson-Darling test for normality
+    result = stats.anderson(data, dist='norm')
+    # If the statistic exceeds the critical value at a given significance level, reject the null hypothesis
+    return result.statistic < result.critical_values[2]  # 5% significance level
+
+# Function to perform G-means clustering
+def gmeans(X, max_k=10, min_samples=10, random_state=None):
+    np.random.seed(random_state)
+    
+    # Start with KMeans for an initial guess of the clusters
+    kmeans = KMeans(n_clusters=2, random_state=random_state)
+    kmeans.fit(X)
+    
+    labels = kmeans.labels_
+    cluster_centers = kmeans.cluster_centers_
+    
+    # For each cluster, check if it follows a Gaussian distribution
+    for i in range(kmeans.n_clusters):
+        cluster_data = X[labels == i]
+        
+        # Check if the cluster follows a Gaussian distribution
+        if not is_gaussian(cluster_data[:, 0]):  # Check only the first dimension for simplicity
+            # Split the cluster and increase the number of clusters
+            kmeans = KMeans(n_clusters=kmeans.n_clusters + 1, random_state=random_state)
+            kmeans.fit(X)
+            labels = kmeans.labels_
+            cluster_centers = kmeans.cluster_centers_
+    
+    return kmeans
+
+# Load netML dataset
 data = pd.read_csv("../Data_Resources/netML/netML_dataset.csv")
 
 # Define label (assumed 'Label' column contains ground truth)
 data['label'] = data['Label'].apply(lambda x: 1 if x == "Attack" else 0)
 features = data.drop(columns=["label"])
 
-# Feature preprocessing
+# Feature-specific embedding and preprocessing
 # 1. Categorical Data Embedding
 categorical_features = ['Protocol']  # Assuming 'Protocol' is categorical
 encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
@@ -55,18 +87,19 @@ binary_data = data[binary_features].values
 # Combine processed features
 X = np.hstack([categorical_data, time_data, packet_length_data, count_data, binary_data])
 
-# Dimensionality reduction using PCA
+# Dimensionality reduction
 pca = PCA(n_components=10, random_state=42)
 X_reduced = pca.fit_transform(X)
 
-# Apply MeanShift clustering
-mean_shift = MeanShift(bandwidth=2)  # Set bandwidth based on your data (larger values group points into fewer clusters)
-print("Clustering in Progress...")
+# Apply G-means clustering
+gmeans_model = gmeans(X_reduced)
 
-with tqdm(total=len(X_reduced), desc="Clustering", unit="samples") as pbar:
-    cluster_labels = mean_shift.fit_predict(X_reduced)
-    data['cluster'] = cluster_labels
-    pbar.update(len(X_reduced))
+# Determine the cluster labels
+data['cluster'] = gmeans_model.labels_
+
+# Adjust Cluster Labels to Match Ground Truth (if needed)
+cluster_mapping = {0: 1, 1: 0}
+data['adjusted_cluster'] = data['cluster'].map(cluster_mapping)
 
 # Evaluate Clustering Performance
 def evaluate_clustering(y_true, y_pred, X_data):
@@ -96,11 +129,12 @@ def evaluate_clustering(y_true, y_pred, X_data):
     return {}
 
 metrics_original = evaluate_clustering(data['label'], data['cluster'], X_reduced)
+metrics_adjusted = evaluate_clustering(data['label'], data['adjusted_cluster'], X_reduced)
 
 # Save Results to CSV
-data[['cluster', 'label']].to_csv("./netML_MShift_clustering_Compare.csv", index=False)
-metrics_df = pd.DataFrame([metrics_original], index=["Original"])
-metrics_df.to_csv("./netML_MShift_clustering_Compare_Metrics.csv", index=True)
+data[['cluster', 'adjusted_cluster', 'label']].to_csv("./netML_Gmeans_clustering_Compare.csv", index=False)
+metrics_df = pd.DataFrame([metrics_original, metrics_adjusted], index=["Original", "Adjusted"])
+metrics_df.to_csv("./netML_Gmeans_clustering_Compare_Metrics.csv", index=True)
 
 # Print Evaluation Results
 print("\nClustering & Evaluation Completed!")
