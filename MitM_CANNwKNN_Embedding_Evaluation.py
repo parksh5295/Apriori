@@ -67,10 +67,12 @@ with tqdm(total=len(X_reduced), desc="Clustering", unit="samples") as pbar:
     cluster_labels = cann_knn.fit_predict(X_reduced)
     data['cluster'] = cluster_labels
     pbar.update(len(X_reduced))
+print("\nClustering Done! Proceeding to CSV Saving...")
 
 # 7. Adjust Cluster Labels to Match Ground Truth (if needed)
 cluster_mapping = {0: 1, 1: 0}
 data['adjusted_cluster'] = data['cluster'].map(cluster_mapping)
+print("\nMapping Done!")
 
 # 8. Evaluate Clustering Performance
 def evaluate_clustering(y_true, y_pred, X_data):
@@ -101,6 +103,7 @@ def evaluate_clustering(y_true, y_pred, X_data):
 
 metrics_original = evaluate_clustering(data['Label'], data['cluster'], X_reduced)
 metrics_adjusted = evaluate_clustering(data['Label'], data['adjusted_cluster'], X_reduced)
+print("\nScore Compute Done!")
 
 '''
 # Save Results to CSV
@@ -109,14 +112,16 @@ metrics_df = pd.DataFrame([metrics_original, metrics_adjusted], index=["Original
 metrics_df.to_csv("./MitM_CANNwKNN_clustering_Compare_Metrics.csv", index=True)
 '''
 
+batch_size = 10000  # Number of rows to save at once
 # Save Results to CSV with Progress Bar
 save_path = "./MitM_CANNwKNN_clustering_Compare.csv"
+print(f"Saving CSV to {save_path}...")
 with open(save_path, "w") as f:
     data[['cluster', 'adjusted_cluster', 'Label']].iloc[:0].to_csv(f, index=False)  # Write header
     with tqdm(total=len(data), desc="Saving CSV", unit="rows") as pbar:
-        for i in range(len(data)):
-            data.iloc[i:i+1][['cluster', 'adjusted_cluster', 'Label']].to_csv(f, header=False, index=False)
-            pbar.update(1)
+        for i in range(0, len(data), batch_size):
+            data.iloc[i:i+batch_size][['cluster', 'adjusted_cluster', 'Label']].to_csv(f, header=False, index=False)
+            pbar.update(min(batch_size, len(data) - i))
 
 # Save Metrics CSV with Progress Bar
 metrics_df = pd.DataFrame([metrics_original, metrics_adjusted], index=["Original", "Adjusted"])
