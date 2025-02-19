@@ -102,10 +102,26 @@ def evaluate_clustering(y_true, y_pred, X_data):
 metrics_original = evaluate_clustering(data['Label'], data['cluster'], X_reduced)
 metrics_adjusted = evaluate_clustering(data['Label'], data['adjusted_cluster'], X_reduced)
 
+'''
 # Save Results to CSV
 data[['cluster', 'adjusted_cluster', 'Label']].to_csv("./MitM_CANNwKNN_clustering_Compare.csv", index=False)
 metrics_df = pd.DataFrame([metrics_original, metrics_adjusted], index=["Original", "Adjusted"])
 metrics_df.to_csv("./MitM_CANNwKNN_clustering_Compare_Metrics.csv", index=True)
+'''
+
+# Save Results to CSV with Progress Bar
+save_path = "./MitM_CANNwKNN_clustering_Compare.csv"
+with open(save_path, "w") as f:
+    data[['cluster', 'adjusted_cluster', 'Label']].iloc[:0].to_csv(f, index=False)  # Write header
+    with tqdm(total=len(data), desc="Saving CSV", unit="rows") as pbar:
+        for i in range(len(data)):
+            data.iloc[i:i+1][['cluster', 'adjusted_cluster', 'Label']].to_csv(f, header=False, index=False)
+            pbar.update(1)
+
+# Save Metrics CSV with Progress Bar
+metrics_df = pd.DataFrame([metrics_original, metrics_adjusted], index=["Original", "Adjusted"])
+metrics_save_path = "./MitM_CANNwKNN_clustering_Compare_Metrics.csv"
+metrics_df.to_csv(metrics_save_path, index=True)
 
 # Print Evaluation Results
 print("\nClustering & Evaluation Completed!")
