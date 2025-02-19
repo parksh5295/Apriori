@@ -102,29 +102,36 @@ def evaluate_clustering(y_true, y_pred, X_data):
         }
     return {}
 '''
+from tqdm import tqdm
+
 def evaluate_clustering(y_true, y_pred, X_data):
     if y_true.empty:
         return {}
 
     metrics = {}
-    average_types = ["macro", "micro", "weighted"]
+
     metric_functions = {
-        "accuracy": accuracy_score,
         "precision": precision_score,
         "recall": recall_score,
         "f1_score": f1_score,
         "jaccard": jaccard_score
     }
+    average_types = ["macro", "micro", "weighted"]
 
     print("\n[INFO] Evaluating clustering metrics...")
 
-    with tqdm(total=len(metric_functions) * len(average_types) + 1, desc="Computing Metrics") as pbar:
+    with tqdm(total=1 + len(metric_functions) * len(average_types) + 1, desc="Computing Metrics") as pbar:
+        # ✅ accuracy_score는 average 인자가 필요 없으므로 따로 계산
+        metrics["accuracy"] = accuracy_score(y_true, y_pred)
+        pbar.update(1)
+
+        # ✅ macro, micro, weighted 평균으로 precision, recall, f1-score, jaccard 계산
         for avg in average_types:
             for key, func in metric_functions.items():
                 metrics[f"{avg}_{key}"] = func(y_true, y_pred, average=avg, zero_division=0)
                 pbar.update(1)
 
-        # Silhouette score (last step)
+        # ✅ silhouette_score (마지막 단계)
         metrics["silhouette"] = silhouette_score(X_data, y_pred) if len(set(y_pred)) > 1 else np.nan
         pbar.update(1)
 
