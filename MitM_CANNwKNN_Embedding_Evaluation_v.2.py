@@ -5,16 +5,24 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from sklearn.decomposition import PCA
 from tqdm import tqdm
 from sklearn.neighbors import KNeighborsClassifier
-import random
+from sklearn.cluster import AgglomerativeClustering
+
 
 # CANN with KNN Implementation
 class CANN_KNN:
     def __init__(self, n_neighbors=5):
         self.n_neighbors = n_neighbors
         self.knn = KNeighborsClassifier(n_neighbors=self.n_neighbors)
-    
+        self.agglomerative = AgglomerativeClustering(n_clusters=2)
+
     def fit_predict(self, X):
-        self.knn.fit(X, np.arange(len(X)))  # Assign unique labels for initial fit
+        # 1. Create two clusters with Agglomerative Clustering
+        cluster_labels = self.agglomerative.fit_predict(X)
+
+        # 2️. Re-learning with KNN
+        self.knn.fit(X, cluster_labels)
+
+        # 3️. Return the final cluster result (consisting only of 0,1)
         return self.knn.predict(X)
 
 # 1. Load Kitsune (MitM) Dataset
