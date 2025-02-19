@@ -67,13 +67,14 @@ with tqdm(total=len(X_reduced), desc="Clustering", unit="samples") as pbar:
     cluster_labels = cann_knn.fit_predict(X_reduced)
     data['cluster'] = cluster_labels
     pbar.update(len(X_reduced))
-print("\nClustering Done! Proceeding to CSV Saving...")
+print("\nClustering Done!")
 
 # 7. Adjust Cluster Labels to Match Ground Truth (if needed)
 cluster_mapping = {0: 1, 1: 0}
 data['adjusted_cluster'] = data['cluster'].map(cluster_mapping)
 print("\nMapping Done!")
 
+'''
 # 8. Evaluate Clustering Performance
 def evaluate_clustering(y_true, y_pred, X_data):
     if not y_true.empty:
@@ -100,6 +101,34 @@ def evaluate_clustering(y_true, y_pred, X_data):
             "weighted_silhouette": silhouette_score(X_data, y_pred) if len(set(y_pred)) > 1 else np.nan,
         }
     return {}
+'''
+def evaluate_clustering(y_true, y_pred, X_data):
+    if y_true.empty:
+        return {}
+
+    metrics = {}
+    average_types = ["macro", "micro", "weighted"]
+    metric_functions = {
+        "accuracy": accuracy_score,
+        "precision": precision_score,
+        "recall": recall_score,
+        "f1_score": f1_score,
+        "jaccard": jaccard_score
+    }
+
+    print("\n[INFO] Evaluating clustering metrics...")
+
+    with tqdm(total=len(metric_functions) * len(average_types) + 1, desc="Computing Metrics") as pbar:
+        for avg in average_types:
+            for key, func in metric_functions.items():
+                metrics[f"{avg}_{key}"] = func(y_true, y_pred, average=avg, zero_division=0)
+                pbar.update(1)
+
+        # Silhouette score (last step)
+        metrics["silhouette"] = silhouette_score(X_data, y_pred) if len(set(y_pred)) > 1 else np.nan
+        pbar.update(1)
+
+    return metrics
 
 metrics_original = evaluate_clustering(data['Label'], data['cluster'], X_reduced)
 metrics_adjusted = evaluate_clustering(data['Label'], data['adjusted_cluster'], X_reduced)
