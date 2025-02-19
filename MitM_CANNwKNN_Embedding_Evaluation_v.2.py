@@ -76,7 +76,7 @@ data['adjusted_cluster'] = data['cluster'].map(cluster_mapping)
 print("\nMapping Done!")
 
 # 8. Evaluate Clustering Performance
-def evaluate_clustering(y_true, y_pred, X_data, sample_size=5000):
+def evaluate_clustering(y_true, y_pred, X_data, sample_size=3000):
     if y_true.empty:
         return {}
 
@@ -103,7 +103,7 @@ def evaluate_clustering(y_true, y_pred, X_data, sample_size=5000):
                 metrics[f"{avg}_{key}"] = func(y_true, y_pred, average=avg, zero_division=0)
                 pbar.update(1)
 
-        # Silhouette Score (Calculate after 5000 samples)
+        # Silhouette Score (Calculate after some samples)
         if len(set(y_pred)) > 1:
             sample_indices = np.random.choice(len(X_data), min(sample_size, len(X_data)), replace=False)
             X_sample = X_data[sample_indices]
