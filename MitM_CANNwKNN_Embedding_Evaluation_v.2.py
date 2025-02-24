@@ -110,7 +110,9 @@ def evaluate_clustering(y_true, y_pred, X_data, sample_size=3000):
             for key, func in metric_functions.items():
                 metrics[f"{avg}_{key}"] = func(y_true, y_pred, average=avg, zero_division=0)
                 pbar.update(1)
-
+        
+        # Silhouette scores take a very long time to calculate, so I exclude that.
+        '''
         # Silhouette Score (Calculate after some samples)
         if len(set(y_pred)) > 1:
             sample_indices = np.random.choice(len(X_data), min(sample_size, len(X_data)), replace=False)
@@ -119,6 +121,7 @@ def evaluate_clustering(y_true, y_pred, X_data, sample_size=3000):
             metrics["silhouette"] = silhouette_score(X_sample, y_sample)
         else:
             metrics["silhouette"] = np.nan
+        '''
         
         pbar.update(1)
 
