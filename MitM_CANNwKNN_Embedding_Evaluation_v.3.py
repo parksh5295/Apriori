@@ -74,6 +74,9 @@ print("\nClustering Done!")
 # 7. Adjust Cluster Labels to Match Ground Truth (if needed)
 cluster_mapping = {0: 1, 1: 0}
 data['adjusted_cluster'] = data['cluster'].map(cluster_mapping)
+print(f"NaN in adjusted_cluster: {data['adjusted_cluster'].isna().sum()}") # Count NaN from adjusted_cluster
+print(set(data['cluster']))  # Verify the unique values in the cluster column
+print(set(data['adjusted_cluster']))  # Verify the unique values in the adjusted_cluster column
 print("\nMapping Done!")
 
 '''
