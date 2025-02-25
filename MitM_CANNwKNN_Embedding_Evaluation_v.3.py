@@ -58,6 +58,7 @@ X = np.hstack([categorical_data, time_data, packet_length_data, count_data, bina
 # 5. Dimensionality Reduction using PCA
 pca = PCA(n_components=10, random_state=42)
 X_reduced = pca.fit_transform(X)
+print(f"NaN in X_reduced: {np.isnan(X_reduced).sum()}") # Count NaN from X_reduced
 
 # 6. Apply CANN with KNN Clustering
 cann_knn = CANN_KNN(n_neighbors=5)
@@ -67,6 +68,7 @@ with tqdm(total=len(X_reduced), desc="Clustering", unit="samples") as pbar:
     cluster_labels = cann_knn.fit_predict(X_reduced)
     data['cluster'] = cluster_labels
     pbar.update(len(X_reduced))
+print(f"NaN in cluster_labels: {np.isnan(cluster_labels).sum()}") # Count NaN from cluster_labels
 print("\nClustering Done!")
 
 # 7. Adjust Cluster Labels to Match Ground Truth (if needed)
