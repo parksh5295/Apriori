@@ -5,24 +5,15 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from sklearn.decomposition import PCA
 from tqdm import tqdm
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.cluster import AgglomerativeClustering
-
 
 # CANN with KNN Implementation
 class CANN_KNN:
     def __init__(self, n_neighbors=5):
         self.n_neighbors = n_neighbors
         self.knn = KNeighborsClassifier(n_neighbors=self.n_neighbors)
-        self.agglomerative = AgglomerativeClustering(n_clusters=2)
-
+    
     def fit_predict(self, X):
-        # 1. Create two clusters with Agglomerative Clustering
-        cluster_labels = self.agglomerative.fit_predict(X)
-
-        # 2️. Re-learning with KNN
-        self.knn.fit(X, cluster_labels)
-
-        # 3️. Return the final cluster result (consisting only of 0,1)
+        self.knn.fit(X, np.arange(len(X)))  # Assign unique labels for initial fit
         return self.knn.predict(X)
 
 # 1. Load Kitsune (MitM) Dataset
@@ -83,8 +74,37 @@ cluster_mapping = {0: 1, 1: 0}
 data['adjusted_cluster'] = data['cluster'].map(cluster_mapping)
 print("\nMapping Done!")
 
+'''
 # 8. Evaluate Clustering Performance
-def evaluate_clustering(y_true, y_pred, X_data, sample_size=3000):
+def evaluate_clustering(y_true, y_pred, X_data):
+    if not y_true.empty:
+        return {
+            "macro_accuracy": accuracy_score(y_true, y_pred),
+            "macro_precision": precision_score(y_true, y_pred, average='macro', zero_division=0),
+            "macro_recall": recall_score(y_true, y_pred, average='macro', zero_division=0),
+            "macro_f1_score": f1_score(y_true, y_pred, average='macro', zero_division=0),
+            "macro_jaccard": jaccard_score(y_true, y_pred, average='macro', zero_division=0),
+            "macro_silhouette": silhouette_score(X_data, y_pred) if len(set(y_pred)) > 1 else np.nan,
+
+            "micro_accuracy": accuracy_score(y_true, y_pred),
+            "micro_precision": precision_score(y_true, y_pred, average='micro', zero_division=0),
+            "micro_recall": recall_score(y_true, y_pred, average='micro', zero_division=0),
+            "micro_f1_score": f1_score(y_true, y_pred, average='micro', zero_division=0),
+            "micro_jaccard": jaccard_score(y_true, y_pred, average='micro', zero_division=0),
+            "micro_silhouette": silhouette_score(X_data, y_pred) if len(set(y_pred)) > 1 else np.nan,
+            
+            "weighted_accuracy": accuracy_score(y_true, y_pred),
+            "weighted_precision": precision_score(y_true, y_pred, average='weighted', zero_division=0),
+            "weighted_recall": recall_score(y_true, y_pred, average='weighted', zero_division=0),
+            "weighted_f1_score": f1_score(y_true, y_pred, average='weighted', zero_division=0),
+            "weighted_jaccard": jaccard_score(y_true, y_pred, average='weighted', zero_division=0),
+            "weighted_silhouette": silhouette_score(X_data, y_pred) if len(set(y_pred)) > 1 else np.nan,
+        }
+    return {}
+'''
+from tqdm import tqdm
+
+def evaluate_clustering(y_true, y_pred, X_data):
     if y_true.empty:
         return {}
 
@@ -101,19 +121,15 @@ def evaluate_clustering(y_true, y_pred, X_data, sample_size=3000):
     print("\n[INFO] Evaluating clustering metrics...")
 
     with tqdm(total=1 + len(metric_functions) * len(average_types) + 1, desc="Computing Metrics") as pbar:
-        # Accuracy (Calculated separately, no average required)
+        # Calculate accuracy_score separately because it doesn't need an average argument
         metrics["accuracy"] = accuracy_score(y_true, y_pred)
         pbar.update(1)
 
-        # Precision, Recall, F1, Jaccard (macro/micro/weighted)
+        # Calculate precision, recall, f1-score, jaccard with macro, micro, weighted average
         for avg in average_types:
             for key, func in metric_functions.items():
                 metrics[f"{avg}_{key}"] = func(y_true, y_pred, average=avg, zero_division=0)
                 pbar.update(1)
-        
-        # Silhouette scores take a very long time to calculate, so I exclude that.
-        
-        pbar.update(1)
 
     return metrics
 
@@ -130,7 +146,7 @@ metrics_df.to_csv("./MitM_CANNwKNN_clustering_Compare_Metrics.csv", index=True)
 
 batch_size = 10000  # Number of rows to save at once
 # Save Results to CSV with Progress Bar
-save_path = "./MitM_CANNwKNN_clustering_Compare_v.2.csv"
+save_path = "./MitM_CANNwKNN_clustering_Compare.csv"
 print(f"Saving CSV to {save_path}...")
 with open(save_path, "w") as f:
     data[['cluster', 'adjusted_cluster', 'Label']].iloc[:0].to_csv(f, index=False)  # Write header
@@ -141,7 +157,7 @@ with open(save_path, "w") as f:
 
 # Save Metrics CSV with Progress Bar
 metrics_df = pd.DataFrame([metrics_original, metrics_adjusted], index=["Original", "Adjusted"])
-metrics_save_path = "./MitM_CANNwKNN_clustering_Compare_Metrics_v.2.csv"
+metrics_save_path = "./MitM_CANNwKNN_clustering_Compare_Metrics.csv"
 metrics_df.to_csv(metrics_save_path, index=True)
 
 # Print Evaluation Results

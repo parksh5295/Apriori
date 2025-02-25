@@ -121,17 +121,17 @@ def evaluate_clustering(y_true, y_pred, X_data):
     print("\n[INFO] Evaluating clustering metrics...")
 
     with tqdm(total=1 + len(metric_functions) * len(average_types) + 1, desc="Computing Metrics") as pbar:
-        # ✅ accuracy_score는 average 인자가 필요 없으므로 따로 계산
+        # Calculate accuracy_score separately because it doesn't need an average argument
         metrics["accuracy"] = accuracy_score(y_true, y_pred)
         pbar.update(1)
 
-        # ✅ macro, micro, weighted 평균으로 precision, recall, f1-score, jaccard 계산
+        # Calculate precision, recall, f1-score, jaccard with macro, micro, weighted average
         for avg in average_types:
             for key, func in metric_functions.items():
                 metrics[f"{avg}_{key}"] = func(y_true, y_pred, average=avg, zero_division=0)
                 pbar.update(1)
 
-        # ✅ silhouette_score (마지막 단계)
+        # silhouette_score
         metrics["silhouette"] = silhouette_score(X_data, y_pred) if len(set(y_pred)) > 1 else np.nan
         pbar.update(1)
 
