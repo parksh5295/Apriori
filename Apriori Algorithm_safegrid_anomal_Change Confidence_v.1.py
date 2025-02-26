@@ -4,74 +4,74 @@ import numpy as np
 # Step 1: Load the dataset and create the 'anomal' column
 data = pd.read_csv('./output-dataset_ESSlab.csv')
 
-# 'reconnaissance', 'infection', 'action' 열 중 하나라도 1인 경우
+# If any of the columns 'reconnaissance', 'infection', or 'action' are equal to 1
 data['anomal'] = data[['reconnaissance', 'infection', 'action']].any(axis=1).astype(int)
 
-# 'reconnaissance', 'infection', 'action' 열을 제외한 열 선택
+# Select columns except for the 'reconnaissance', 'infection', and 'action' columns
 cols_to_change = data.columns.difference(['reconnaissance', 'infection', 'action'])
-# 0보다 큰 값을 1로 변경
+# Change values greater than 0 to 1
 data[cols_to_change] = data[cols_to_change].applymap(lambda x: 1 if x > 0 else 0)
 
-# 'anomal' 값이 1인 행만 필터링
+# Filter only rows with a value of 1 for 'anomal'
 anormal_rows = data[data['anomal'] == 1]
-# 'anomal'이 1인 열들 선택, 'reconnaissance', 'infection', 'action' 열 제외
+# Select columns with 'anomal' equal to 1, excluding columns 'reconnaissance', 'infection', and 'action'
 anormal_columns = anormal_rows.columns.difference(['anomal', 'reconnaissance', 'infection', 'action'])
 
-# 각 column에서 값이 1인 row의 인덱스 리스트 만들기
+# Create an indexed list of rows with a value of 1 in each column
 anormal_lists = {col: anormal_rows.index[anormal_rows[col] == 1].tolist() for col in anormal_columns}
 
-# 초기 confidence 설정
+# Initial confidence settings
 confidence = 0.7  # 70%
 percent = confidence
 
-# 관련성 있는 리스트를 저장할 리스트
+# Lists to store relevant lists
 related_groups = []
-considered = set()  # 이미 고려된 열들을 저장할 집합
+considered = set()  # A set to store columns that have already been considered
 
-# 모든 열에 대해 반복
+# Repeat for all columns
 for a in list(anormal_lists.keys()):
     if a in considered:
         continue
-    current_group = {a}  # 현재 그룹 초기화
-    considered.add(a)  # 현재 열을 고려된 집합에 추가
-    related_groups.append(current_group.copy())  # 초기 그룹 추가
+    current_group = {a}  # Reset the current group
+    considered.add(a)  # Add the current column to the considered set
+    related_groups.append(current_group.copy())  # Add an initial group
     new_group_found = True
     
     while new_group_found:
         new_group_found = False
         for b in list(anormal_lists.keys()):
             if b not in current_group:
-                # A와 B의 관련성 확인
+                # Check the relevance of A and B
                 a_count = len(anormal_lists[a])
                 b_count = len(anormal_lists[b])
                 combined_count = len(set(anormal_lists[a]) & set(anormal_lists[b]))
 
-                # a_count 또는 b_count가 0이 아닐 경우에만 조건 확인
+                # Check condition only if a_count or b_count is non-zero
                 if a_count > 0 and b_count > 0:
                     if combined_count / a_count >= percent and combined_count / b_count >= percent:
                         current_group.add(b)
-                        considered.add(b)  # 추가된 열을 고려된 집합에 추가
+                        considered.add(b)  # Add the added column to the considered set
                         new_group_found = True
-                        related_groups.append(current_group.copy())  # 중간 그룹 추가
+                        related_groups.append(current_group.copy())  # Add an intermediate group
 
-# 결과 확인
+# Check the results
 print([list(group) for group in related_groups])
 
 # Step 2: Group size count
 count_by_size = {}
 for group in related_groups:
-    size = len(group)  # 그룹의 요소 개수
+    size = len(group)  # Number of elements in the group
     if size in count_by_size:
         count_by_size[size] += 1
     else:
         count_by_size[size] = 1
 
-# 결과 출력
+# Output the results
 sorted_counts = sorted(count_by_size.items())
 for size, count in sorted_counts:
     print(f"Element count {size}: {count} groups")
 
-# related_groups의 각 그룹을 DataFrame으로 변환
+# Convert each group in related_groups to a DataFrame
 related_groups_df = pd.DataFrame(related_groups)
 
 # Step 3: Evaluation and confidence adjustment

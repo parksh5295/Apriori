@@ -3,7 +3,7 @@ import pymysql
 import itertools
 import sys
 
-# MySQL 데이터베이스 연결 설정
+# MySQL Database connection settings
 def mysqlDbConnection(u, pw, h, p, d):
     try:
         conn = pymysql.connect(user=u, password=pw, host=h, port=p, database=d)
@@ -13,22 +13,22 @@ def mysqlDbConnection(u, pw, h, p, d):
         sys.exit(1)
     return conn
 
-# 데이터 전처리 및 Apriori 알고리즘 적용
+# Data preprocessing and application of Apriori algorithm
 dbConn = mysqlDbConnection('SafeGrid', 'safegrid001', 'localhost', 3306, 'safegrid_apriori_data')
 cursor = dbConn.cursor()
 
-# 데이터 불러오기 쿼리
+# Data retrieval query
 query = "SELECT * FROM DataDeck_Apriori"
 cursor.execute(query)
 data = cursor.fetchall()
 print("1")
 
-# 연결 종료
+# Connection terminated
 cursor.close()
 dbConn.close()
 
 print("2")
-# 데이터 전처리: reconnaissance, infection, action을 제외하고 'on' 또는 'off'로 변환
+# Data preprocessing: Convert to 'on' or 'off' except reconnaissance, infection, action
 def preprocess_data(data):
     transactions = []
     for row in data:
@@ -40,7 +40,7 @@ transactions = preprocess_data(data)
 print("3")
 
 print("4")
-# 지지도 계산 함수
+# Support calculation function
 def calculate_support(itemset, transactions):
     count = 0
     itemset = set(itemset)
@@ -51,7 +51,7 @@ def calculate_support(itemset, transactions):
 print("5")
 
 print("6")
-# 후보 생성 함수
+# Candidate Generation Function
 def generate_candidates(itemset, length):
     print ("itemset: {}".format(itemset))
     print ("length: {}".format(length))
@@ -76,7 +76,7 @@ print("7")
 
 print("8")
 
-# Apriori 알고리즘
+# Apriori Algorithm
 def apriori(transactions, min_support, min_confidence):
     itemset = set(frozenset([item]) for transaction in transactions for item in transaction)
     length = 1
@@ -109,7 +109,7 @@ def apriori(transactions, min_support, min_confidence):
 
     print("9")
 
-    # 규칙 생성 및 confidence 계산
+    # Create rules and calculate confidence
     rules = []
     for item in frequent_itemsets:
         for i in range(1, len(item)):
@@ -125,13 +125,13 @@ def apriori(transactions, min_support, min_confidence):
 print("10")
 
 print("11")
-# Apriori 알고리즘 실행
-min_support = 0.1  # 최소 지지도
-min_confidence = 0.7  # 최소 confidence
+# Execute Apriori Algorithm
+min_support = 0.1  # Minimum Support
+min_confidence = 0.7  # Minimum confidence
 rules = apriori(transactions, min_support, min_confidence)
 print("12")
 
-# 결과 출력
+# Result Output
 print("\n== Found Rules ==")
 for antecedent, consequent, confidence in rules:
     print(f"Rule: {antecedent} -> {consequent}, Confidence: {confidence}")

@@ -2,20 +2,20 @@ import pandas as pd
 import itertools
 from collections import defaultdict
 
-# 데이터 전처리 및 Apriori 알고리즘 적용
+# Data preprocessing and application of Apriori algorithm
 def load_data(file_path):
     data = pd.read_csv(file_path)
     return data
 
-# 데이터 전처리: reconnaissance, infection, action을 제외하고 'on' 또는 'off'로 변환
+# Data preprocessing: Convert to 'on' or 'off' except reconnaissance, infection, action
 def preprocess_data(data):
     transactions = []
     for index, row in data.iterrows():
-        transaction = {item: 'on' if item > 0 else 'off' for item in row[1:]}  # 1번째 열부터 변환
+        transaction = {item: 'on' if item > 0 else 'off' for item in row[1:]}  # Convert starting from the 1st column
         transactions.append(transaction)
     return transactions
 
-# 지지도 계산 함수
+# Support calculation function
 def calculate_support(itemset, transactions):
     count = 0
     itemset = set(itemset)
@@ -24,7 +24,7 @@ def calculate_support(itemset, transactions):
             count += 1
     return count / len(transactions)
 
-# 후보 생성 함수
+# Candidate Generation Function
 def generate_candidates(itemsets, length):
     candidates = set()
     itemsets = list(itemsets)
@@ -35,9 +35,9 @@ def generate_candidates(itemsets, length):
                 candidates.add(union)
     return candidates
 
-# Apriori 알고리즘
+# Apriori Algorithm
 def apriori(transactions, min_support, min_confidence):
-    # 초기 itemset
+    # Initial itemset
     itemset = {frozenset([item]) for transaction in transactions for item in transaction.keys()}
     length = 1
     frequent_itemsets = set()
@@ -58,7 +58,7 @@ def apriori(transactions, min_support, min_confidence):
         itemset = frequent_itemsets_this_round
         frequent_itemsets.update(itemset)
 
-    # 규칙 생성 및 confidence 계산
+    # Create rules and calculate confidence
     rules = []
     for item in frequent_itemsets:
         for i in range(1, len(item)):
@@ -71,19 +71,19 @@ def apriori(transactions, min_support, min_confidence):
                         rules.append((antecedent, consequent, confidence))
     return rules
 
-# CSV 파일 경로 설정
+# CSV file path settings
 file_path = './output-dataset_ESSlab.csv'
 
-# 데이터 불러오기 및 전처리
+# Data loading and preprocessing
 data = load_data(file_path)
 transactions = preprocess_data(data)
 
-# Apriori 알고리즘 실행
-min_support = 0.1  # 최소 지지도
-min_confidence = 0.7  # 최소 confidence
+# Execute Apriori Algorithm
+min_support = 0.1  # Minimum Support
+min_confidence = 0.7  # Minimum confidence
 rules = apriori(transactions, min_support, min_confidence)
 
-# 결과 출력
+# Result Output
 print("\n== Found Rules ==")
 for antecedent, consequent, confidence in rules:
     print(f"Rule: {antecedent} -> {consequent}, Confidence: {confidence}")

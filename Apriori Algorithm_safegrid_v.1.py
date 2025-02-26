@@ -19,30 +19,30 @@ def mysqlDbClose(_dbConn):
         print("Error closing from MySQL Platform")
         sys.exit(1)
 
-# MySQL 연결 설정
+# MySQL connection settings
 dbConn = mysqlDbConnection('SafeGrid', 'safegrid001', 'localhost', 3306, 'sample')
 cursor = dbConn.cursor()
 
-# 데이터 불러오기 쿼리
+# Data retrieval query
 query = "SELECT * FROM DataDeck_Apriori"
 cursor.execute(query)
 data = cursor.fetchall()
 
-# 연결 종료
+# Connection terminated
 cursor.close()
 mysqlDbClose(dbConn)
 
-# 데이터 변환 및 전처리
+# Data conversion and preprocessing
 transactions = []
 for row in data:
     transaction = []
     for item in row:
         if item in ['reconnaissance', 'infection', 'action']:
-            continue  # reconnaissance, infection, action은 제외
+            continue  # Excluding reconnaissance, infection, and action
         transaction.append((item, 'on' if row[item] > 0 else 'off'))
     transactions.append(transaction)
 
-# 지지도 계산 함수
+# Support calculation function
 def calculate_support(itemset, transactions):
     count = 0
     for transaction in transactions:
@@ -50,11 +50,11 @@ def calculate_support(itemset, transactions):
             count += 1
     return count / len(transactions)
 
-# 후보 생성 함수
+# Candidate Generation Function
 def generate_candidates(itemset, length):
     return list(set([item1.union(item2) for item1 in itemset for item2 in itemset if len(item1.union(item2)) == length]))
 
-# Apriori 알고리즘
+# Apriori Algorithm
 def apriori(transactions, min_support, min_confidence):
     itemset = [frozenset([item]) for transaction in transactions for item in transaction]
     length = 1
@@ -70,7 +70,7 @@ def apriori(transactions, min_support, min_confidence):
             break
         itemset = frequent_itemset
 
-    # 규칙 생성 및 confidence 계산
+    # Create rules and calculate confidence
     rules = []
     for item in itemset:
         for i in range(1, len(item)):
@@ -84,11 +84,11 @@ def apriori(transactions, min_support, min_confidence):
 
     return rules
 
-# Apriori 알고리즘 실행
-min_support = 0.1  # 최소 지지도
-min_confidence = 0.7  # 최소 confidence
+# Execute Apriori Algorithm
+min_support = 0.1  # Minimum Support
+min_confidence = 0.7  # Minimum confidence
 rules = apriori(transactions, min_support, min_confidence)
 
-# 결과 출력
+# Output Result
 for antecedent, consequent, confidence in rules:
     print(f"Rule: {antecedent} -> {consequent}, Confidence: {confidence}")

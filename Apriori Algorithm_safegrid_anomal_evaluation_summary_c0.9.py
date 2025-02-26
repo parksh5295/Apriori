@@ -1,9 +1,9 @@
 import pandas as pd
 
-# summary CSV 파일 불러오기
+# Loading summary CSV file
 summary = pd.read_csv('./confusion_matrix_summary_anomal_c0.9.csv')
 
-# 지표 계산 함수
+# Indicator calculation function
 def calculate_metrics(row):
     TP = row['TP']
     FP = row['FP']
@@ -26,14 +26,14 @@ def calculate_metrics(row):
         'FPR': fpr
     })
 
-# 각 eva_row에 대해 지표 계산
+# Calculate metrics for each eva_row
 metrics = summary.apply(calculate_metrics, axis=1)
 
-# 결과를 summary DataFrame에 추가
+# Add results to summary DataFrame
 summary = pd.concat([summary, metrics], axis=1)
 
-# 결과를 CSV 파일로 저장
+# Save results as CSV file
 summary.to_csv('anomal_evaluation_summary_metrics_c0.9.csv', index=False)
 
-# 결과 출력
+# Result output
 print(summary)
